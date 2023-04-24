@@ -1,0 +1,19 @@
+Considering a user's Wrapped's "Audio Aura" looks at the average in their top 100 songs for:
+  - energy
+  - valence
+  - danceability,
+
+If this database were one user's Wrapped, we could look at the averages of these by running the SQL command:
+  `select AVG("energy"), AVG("valence"), AVG("danceability") from songs;`
+
+and get:
+  0.65906|0.484443|0.71646
+
+
+Assuming these 3 values range from 0 to 1, the results indicate the user has slightly higher than average energy, average valence, and higher danceability. You could say their mood has high energy and danceability but not neccessarily cheeriness, which makes me think of something like head banging to emo music.
+
+---
+
+One problem with calculating the aura this way is that taking the average does not take into account the spread of the data. 
+  Say the user only listens to songs where values live only on the extremes - an average of these two would land them in the middle, meanwhile they actually do not listen to anything in the middle.
+  For example, A user who listens to all songs at an energy of 100, and a user who listens to half their songs at an energy 0 and the other half at 200 would have the same average.

@@ -211,8 +211,188 @@ SELECT * FROM "sea_lions"
 
 ## OUTER vs INNER
 
-- the three abouve are OUTER joins.
+- the three above are OUTER joins.
 
 ## NATURAL JOIN
 
 - if there are cols of the same name in both tables, will _naturally_ join on them.
+
+---
+
+# Sets
+
+Say in the book industry, You have authors and translators.
+<img src="set1.png" />
+
+## INTERSECTS
+
+<img src="set2.png" />
+
+## UNION
+
+<img src="set3.png" />
+
+## EXCEPT
+
+<img src="set4.png" />
+
+## writing the set queries
+
+Q: get all authors and translators
+A:
+
+```sql
+SELECT "name" FROM "translators"
+  UNION
+  SELECT "name" FROM "authors";
+```
+
+Q: same as above but differentiate who is what.
+A: creates a new col using `'rowdata' as "colname"`
+
+```sql
+SELECT 'author' as "profession", "name" FROM "translators"
+  UNION
+  SELECT 'translator' as "profession", "name" FROM "translators";
+```
+
+Q: get people who are both authors AND translators.
+
+```sql
+SELECT "name" FROM "translators"
+  INTERSECT
+  SELECT "name" FROM "authors";
+```
+
+Q: Get books that Sophie Hughes and Margaret Jull Costa' have translated together on.
+
+Step 1. get books Sophie Hughes has translated.
+
+```sql
+SELECT "book_id" FROM "translated"
+  WHERE "translator_id" = (
+    SELECT "id" FROM "translators" WHERE name = 'Sophie Hughes'
+  );
+```
+
+Step 2. get books Margaret Jull Costa has translated.
+
+```sql
+SELECT "book_id" FROM "translated"
+  WHERE "translator_id" = (
+    SELECT "id" FROM "translators" WHERE name = 'Margaret Jull Costa'
+  );
+```
+
+Step 3. `INTERSECT` them
+
+```sql
+SELECT "book_id" FROM "translated"
+  WHERE "translator_id" = (
+    SELECT "id" FROM "translators" WHERE name = 'Sophie Hughes'
+  )
+  INTERSECT
+  SELECT "book_id" FROM "translated"
+    WHERE "translator_id" = (
+      SELECT "id" FROM "translators" WHERE name = 'Margaret Jull Costa'
+    );
+```
+
+this gives us the book id 50.
+
+NOTE: you can only intersect things that are of the same data type
+
+# GROUP BY
+
+Q: how to get the average ratings of a book... per book?
+A:
+
+```sql
+SELECT "book_id", AVG("rating") AS "average rating"
+  FROM "ratings"
+  GROUP BY "book_id"
+```
+
+<img src="group1.png" />
+
+Q: how to get the average ratings of a book... per book?
+A:
+
+```sql
+SELECT "book_id", ROUND(AVG("rating"), 2) AS "average rating"
+  FROM "ratings"
+  GROUP BY "book_id"
+  -- cannot do: WHERE "average rating" > 4.0
+  -- this is because WHERE only works for column names.
+  -- for groups, you must use...
+  HAVING "average rating" > 4.0;
+```
+
+Q: Same as above but max->min average rating.
+A:
+
+```sql
+SELECT "book_id", ROUND(AVG("rating"), 2) AS "average rating"
+  FROM "ratings"
+  GROUP BY "book_id"
+  -- cannot do: WHERE "average rating" > 4.0
+  -- this is because WHERE only works for column names.
+  -- for groups, you must use...
+  HAVING "average rating" > 4.0
+  ORDER BY "average rating" DESC;
+```
+
+Q: How many ratings there are per book
+A:
+
+```sql
+SELECT "book_id", COUNT("rating") AS "number of ratings"
+  FROM "ratings"
+  GROUP BY "book_id";
+```
+
+---
+
+Q: how to get the average ratings of a book... per book, with the bookname.
+A:
+
+```sql
+SELECT "books"."title", "book_id", ROUND(AVG("rating"), 2) AS "average rating"
+  FROM "ratings"
+  JOIN "books" ON "books"."id" = "ratings"."book_id"
+  GROUP BY "book_id"
+  HAVING "average rating" > 4.0
+  ORDER BY "average rating" DESC
+  ;
+```
+
+A:
+
+Step 1: this would get us the ids of authors
+
+```sql
+SELECT "author_id" FROM "authors"
+  WHERE "name" IN ('Jon Fosse', 'Fernanda Melcor')
+```
+
+Q: Get the names of authors who have written more than 1 book.
+A:
+
+```sql
+  SELECT "authors"."name", COUNT(*) AS "book_count"
+    FROM "authors"
+      JOIN "authored"
+        ON "authors"."id" = "authored"."author_id"
+    GROUP BY "authors"."name"
+    HAVING "book_count" > 1
+    ORDER BY "book_count" DESC;
+```
+
+Q: Books published between 2017 and 2018
+
+```sql
+SELECT "title", "published" FROM "books"
+  WHERE "published" BETWEEN '2017-%' AND '2019-%';
+```
+
+(keep in mind exclusive, it goes until just before the very first day of 2019)

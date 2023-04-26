@@ -359,11 +359,11 @@ A:
 ```sql
 SELECT "books"."title", "book_id", ROUND(AVG("rating"), 2) AS "average rating"
   FROM "ratings"
-  JOIN "books" ON "books"."id" = "ratings"."book_id"
+    JOIN "books"
+      ON "books"."id" = "ratings"."book_id"
   GROUP BY "book_id"
   HAVING "average rating" > 4.0
-  ORDER BY "average rating" DESC
-  ;
+  ORDER BY "average rating" DESC;
 ```
 
 A:
@@ -396,3 +396,31 @@ SELECT "title", "published" FROM "books"
 ```
 
 (keep in mind exclusive, it goes until just before the very first day of 2019)
+
+Q: Get the top 10 (based on average ratings) book titles & average ratings
+A:
+
+```sql
+SELECT "books"."title", ROUND(AVG("rating"), 2) AS "average_rating"
+  FROM "books"
+    JOIN "ratings"
+      ON "books"."id" = "ratings"."book_id"
+  GROUP BY "books"."title"
+  ORDER BY "average_rating" DESC LIMIT 10;
+```
+
+Q: Get the top 10 (based on average ratings) book titles & average ratings, with the author names attached
+A:
+
+```sql
+SELECT "books"."title" AS "book title", "authors"."name" AS "author", ROUND(AVG("rating"), 2) AS "average_rating"
+  FROM "books"
+      JOIN "ratings"
+        ON "books"."id" = "ratings"."book_id"
+      JOIN "authored"
+        ON "authored"."book_id" = "books"."id"
+      JOIN "authors"
+        ON "authored"."author_id" = "authors"."id"
+  GROUP BY "books"."title"
+  ORDER BY "average_rating" DESC LIMIT 10;
+```

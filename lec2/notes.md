@@ -193,3 +193,73 @@ These are keywords that are given on the same line as the column declaration, su
 
 - Note: once you apply the PRIMARY KEY constraint, this requires the pk to be not null, so there is no need to put things like NOT NULL on the "id" col.
 - Same goes for the Foreign keys constraints.
+
+## Re-assessing our schema
+
+- the subway system doesnt actually keep track of people as riders, but instead "Charlie Cards", like a metrocard.
+- We can now make a erd like this:
+
+<img src="card1.png" />
+Where....
+  - a *card* can make many, or even 0, *swipes*.
+  - a single *swipe* belongs to one and ONLY one *card*.
+  - And:
+  - a *station* can have many, or even 0, *swipes* that occur at it.
+  - a single *swipe* belongs to one and ONLY one *station*.
+
+And with columns...
+<img src="card2.png" />
+
+## Altering our tables
+
+- all of these are entered in the sqlite terminal
+
+### dropping the riders table
+
+`DROP TABLE "riders";`
+
+### renaming tables & columns
+
+- `ALTER TABLE ...` ok now what do we want to do?...
+  - `RENAME TABLE "table1" TO "table2"`
+  - `ADD COLUMN columnName DATATYPE`
+  - `RENAME COLUMN ... TO ...`
+  - `DROP COLUMN columnName`
+
+Q: We need the "visits" table to be "swipes" table ->
+A: `ALTER TABLE "visits" RENAME TO "swipes";`
+
+Q: We want to add a `type` column (for entering, exiting, adding funds etc...)
+A: `ALTER TABLE "swipes" ADD COLUMN "ttpe" TEXT;`
+
+Q: Oops we typo'd. How to change that column name?
+A: `ALTER TABLE "swipes" RENAME COLUMN "ttpe" TO "type";`
+
+Q: How would I drop the column?
+A: `ALTER TABLE "swipes" DROP COLUMN "type";`
+
+## redoing our schema in the .sql file
+
+### default time of now
+
+- Our swipes has a col called datetime, which is a timestamp.
+- By default we want it to be now, which we can use:
+
+```sql
+  "datetime" NUMERIC NOT NULL DEFAULT CURRENT_TIMESTAMP,
+```
+
+### check
+
+- we want the amount, or transaction fee to be either a positive or negative amt, never 0.
+  - so we can write a check like so:
+
+```sql
+  "amount" NUMERIC NOT NULL CHECK("amount" != 0),
+```
+
+- the 'type' of transaction should only one `IN` some specific strings, so we can write:
+
+```sql
+  "type" TEXT NOT NULL CHECK("type" IN ('enter', 'exit', 'deposit')),
+```
